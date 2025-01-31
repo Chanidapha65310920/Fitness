@@ -15,17 +15,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => TransactionProvider()),
-        ],
-        child: MaterialApp(
-          title: 'Account',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
-            useMaterial3: true,
-          ),
-          home: const MyHomePage(title: 'Flutter Demo Home Page'),
-        ));
+      providers: [
+        ChangeNotifierProvider(create: (context) => TransactionProvider()),
+      ],
+      child: MaterialApp(
+        title: 'Account',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
+          useMaterial3: true,
+        ),
+        home: const MyHomePage(title: 'Flutter Home Page'),
+      ),
+    );
   }
 }
 
@@ -39,62 +40,120 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  bool _showLatest = true;
 
-  void _incrementCounter() {
+  // ฟังก์ชันสลับการเลือก filter
+  void _toggleSort(String? value) {
     setState(() {
-      _counter++;
+      if (value != null) {
+        _showLatest = value == 'Latest';
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold),),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FormScreen()),
-                );
-                if (result != null && result is Map<String, dynamic>) {
-                  Provider.of<TransactionProvider>(context, listen: false)
-                      .addTransaction(Transaction(
-                          title: result['title'],
-                          amount: result['amount'],
-                          dateTime: DateTime.now()));
-                }
-              },
+      appBar: AppBar(
+        // Gradient background
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.teal.shade500, Colors.teal.shade300],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
+          ),
         ),
-        body: Consumer(
-          builder: (context, TransactionProvider provider, Widget? child) {
-            return ListView.builder(
-                itemCount: provider.transactions.length,
-                itemBuilder: (context, int index) {
-                  Transaction data = provider.transactions[index];
-                  return Card(
-                    elevation: 2,
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                    child: ListTile(
-                      title: Text(data.title, style: TextStyle(fontWeight: FontWeight.bold),),
-                      subtitle: Text(
-                          DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)),
-                      leading: CircleAvatar(
-                        child: FittedBox(
-                          child: Text(data.amount.toString()),
-                        ),
+        title: Text(
+          widget.title,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DropdownButton<String>(
+              value: _showLatest ? 'Latest' : 'Oldest',
+              onChanged: _toggleSort,
+              dropdownColor: Colors.white, // Background color for dropdown
+              style: TextStyle(color: Colors.teal.shade700, fontWeight: FontWeight.bold),
+              iconEnabledColor: Colors.teal.shade700, // สีของไอคอน
+              items: <String>['Latest', 'Oldest'].map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: Colors.teal.shade700, // สีของตัวเลือก
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+      body: Consumer<TransactionProvider>(
+        builder: (context, provider, child) {
+          List<Transaction> transactions = _showLatest
+              ? provider.latestTransactions
+              : provider.oldestTransactions;
+
+          return ListView.builder(
+            itemCount: transactions.length,
+            itemBuilder: (context, int index) {
+              Transaction data = transactions[index];
+              return Card(
+                elevation: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  title: Text(
+                    data.title,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  subtitle: Text(
+                    DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime),
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                  leading: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.teal.shade700,
+                    child: FittedBox(
+                      child: Text(
+                        data.amount.toStringAsFixed(0),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ),
-                  );
-                });
-          },
-        ));
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const FormScreen()),
+          );
+          if (result != null && result is Map<String, dynamic>) {
+            Provider.of<TransactionProvider>(context, listen: false)
+                .addTransaction(Transaction(
+                    title: result['title'],
+                    amount: result['amount'],
+                    dateTime: DateTime.now()));
+          }
+        },
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.teal.shade700,
+        elevation: 8,
+      ),
+    );
   }
 }
