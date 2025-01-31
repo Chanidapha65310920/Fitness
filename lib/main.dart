@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Account',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
             useMaterial3: true,
           ),
           home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -52,15 +52,22 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
+          title: Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold),),
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const FormScreen()),
                 );
+                if (result != null && result is Map<String, dynamic>) {
+                  Provider.of<TransactionProvider>(context, listen: false)
+                      .addTransaction(Transaction(
+                          title: result['title'],
+                          amount: result['amount'],
+                          dateTime: DateTime.now()));
+                }
               },
             ),
           ],
@@ -76,8 +83,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     margin:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     child: ListTile(
-                      title: Text(data.title),
-                      subtitle: Text(DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)),
+                      title: Text(data.title, style: TextStyle(fontWeight: FontWeight.bold),),
+                      subtitle: Text(
+                          DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)),
                       leading: CircleAvatar(
                         child: FittedBox(
                           child: Text(data.amount.toString()),
