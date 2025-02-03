@@ -1,7 +1,8 @@
-class Transaction {
+class TransactionItem {
+  int? keyID;
   String title;
   double amount;
   DateTime dateTime;
 
-  Transaction({required this.title, required this.amount, required this.dateTime});
+  TransactionItem({this.keyID, required this.title, required this.amount, required this.dateTime});
 }

@@ -1,4 +1,7 @@
+import 'package:account/model/transaction.dart';
+import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -8,69 +11,98 @@ class FormScreen extends StatefulWidget {
 }
 
 class _FormScreenState extends State<FormScreen> {
-  final _titleController = TextEditingController();
-  final _amountController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+  final titleController = TextEditingController();
+  final amountController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('เพิ่มข้อมูล', style: TextStyle(fontWeight: FontWeight.bold),),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                  labelText: 'ชื่อรายการ',
-                  labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-              autofocus: true,
-            ),
-            TextFormField(
-              controller: _amountController,
-              decoration: const InputDecoration(
-                  labelText: 'จำนวนเงิน',
-                  labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text(
+            'เพิ่มข้อมูล',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: Form(
+          key: formKey,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    final title = _titleController.text;
-                    final amount = double.tryParse(_amountController.text) ?? 0;
-
-                    if (title.isNotEmpty && amount > 0) {
-                      // ส่งข้อมูลกลับไปยังหน้าหลัก
-                      Navigator.pop(
-                          context, {'title': title, 'amount': amount});
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                      labelText: 'ชื่อรายการ',
+                      labelStyle: TextStyle(fontWeight: FontWeight.bold)),
+                  autofocus: true,
+                  validator: (String? value) {
+                    if (value!.isEmpty) {
+                      return 'กรุณากรอกชื่อรายการ';
                     }
+                    return null;
                   },
-                  child: const Text(
-                    'เพิ่มข้อมูล',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.green),
-                  ),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // ย้อนกลับไปหน้าก่อนหน้า
+                TextFormField(
+                  controller: amountController,
+                  decoration: const InputDecoration(
+                      labelText: 'จำนวนเงิน',
+                      labelStyle: TextStyle(fontWeight: FontWeight.bold)),
+                  keyboardType: TextInputType.number,
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return 'กรุณากรอกจำนวนเงิน';
+                    }
+                    try {
+                      double amount = double.parse(value);
+                      if (amount <= 0) {
+                        return 'กรุณากรอกจำนวนเงินที่มากกว่า 0';
+                      }
+                    } catch (e) {
+                      return 'กรุณากรอกจำนวนเงินที่ถูกต้อง';
+                    }
+                    return null;
                   },
-                  child: const Text('ยกเลิก',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.red)),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        if (formKey.currentState!.validate()) {
+                          var provider = Provider.of<TransactionProvider>(context, listen: false);
+                          TransactionItem item = TransactionItem(
+                            title: titleController.text, 
+                            amount: double.parse(amountController.text), 
+                            dateTime: DateTime.now()
+                          );
+                          provider.addTransaction(item);
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: const Text(
+                        'เพิ่มข้อมูล',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        var of = Navigator.of(context);
+                        of.pop(); // ย้อนกลับไปหน้าก่อนหน้า
+                      },
+                      child: const Text('ยกเลิก',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.red)),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
