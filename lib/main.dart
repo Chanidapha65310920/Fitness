@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:account/formScreen.dart';
+import 'package:account/editScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:account/model/transaction.dart';
@@ -64,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Gradient background
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -129,36 +129,35 @@ class _MyHomePageState extends State<MyHomePage> {
             itemBuilder: (context, int index) {
               TransactionItem data = transactions[index];
               return Card(
-                elevation: 8, // ลดเงา
-                margin: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 8), // ลด margin ให้น้อยลง
+                elevation: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // คงขอบมุมโค้งมน
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                color: Colors.white, // คงสีขาวของการ์ด
-                shadowColor: Colors.black.withOpacity(0.1), // คงสีเงาแบบเดิม
+                color: Colors.white,
+                shadowColor: Colors.black.withOpacity(0.1),
                 child: Container(
-                  width: double.infinity, // ให้การ์ดเต็มความกว้างของหน้าจอ
+                  width: double.infinity,
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12), // ลด padding ให้เล็กลง
+                        horizontal: 24, vertical: 12),
                     title: Text(
                       data.title,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 18, // ลดขนาดตัวอักษรเล็กลง
+                        fontSize: 18,
                         color: Colors.teal.shade800,
                       ),
                     ),
                     subtitle: Text(
                       'วันที่บันทึกข้อมูล: ${DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)}',
                       style: TextStyle(
-                        fontSize: 12, // ขนาดตัวอักษรของ subtitle เล็กลง
+                        fontSize: 12,
                         color: Colors.grey[600],
                       ),
                     ),
                     leading: CircleAvatar(
-                      radius: 22, // ขนาดของ circle avatar เล็กลง
+                      radius: 22,
                       backgroundColor: Colors.teal.shade700,
                       child: FittedBox(
                         child: Text(
@@ -166,14 +165,13 @@ class _MyHomePageState extends State<MyHomePage> {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 18, // ขนาดตัวเลขใน avatar ลดลง
+                            fontSize: 18,
                           ),
                         ),
                       ),
                     ),
                     trailing: IconButton(
                       onPressed: () {
-                        // แสดง Dialog ยืนยันการลบ
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -184,18 +182,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               actions: <Widget>[
                                 TextButton(
                                   onPressed: () {
-                                    // ปิด Dialog
                                     Navigator.of(context).pop();
                                   },
                                   child: Text('ยกเลิก'),
                                 ),
                                 TextButton(
                                   onPressed: () async {
-                                    // ลบรายการเมื่อผู้ใช้ยืนยัน
-                                    await provider.deleteTransaction(
-                                        data); // ใช้ await เพื่อให้มั่นใจว่าเสร็จสมบูรณ์ก่อนปิด Dialog
-                                    Navigator.of(context)
-                                        .pop(); // ปิด Dialog หลังจากลบเสร็จ
+                                    await provider.deleteTransaction(data);
+                                    Navigator.of(context).pop();
                                   },
                                   child: Text('ยืนยัน'),
                                 ),
@@ -206,6 +200,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       icon: Icon(Icons.delete, color: Colors.red.shade600),
                     ),
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) {
+                        return EditScreen(item: data);
+                      }));
+                    },
                   ),
                 ),
               );
