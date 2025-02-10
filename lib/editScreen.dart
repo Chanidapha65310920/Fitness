@@ -18,11 +18,31 @@ class _EditScreenState extends State<EditScreen> {
   final amountController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
     titleController.text = widget.item.title;
     amountController.text = widget.item.amount % 1 == 0
         ? widget.item.amount.toInt().toString()
         : widget.item.amount.toString();
+  }
+
+  void _updateTransaction() {
+    if (formKey.currentState!.validate()) {
+      var provider = Provider.of<TransactionProvider>(context, listen: false);
+      TransactionItem item = TransactionItem(
+        keyID: widget.item.keyID,
+        title: titleController.text,
+        amount: double.parse(amountController.text),
+        dateTime: widget.item.dateTime,
+      );
+
+      provider.updateTransaction(item);
+      Navigator.pop(context, true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -77,20 +97,7 @@ class _EditScreenState extends State<EditScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     ElevatedButton(
-                      onPressed: () {
-                        if (formKey.currentState!.validate()) {
-                          var provider = Provider.of<TransactionProvider>(
-                              context,
-                              listen: false);
-                          TransactionItem item = TransactionItem(
-                              keyID: widget.item.keyID,
-                              title: titleController.text,
-                              amount: double.parse(amountController.text),
-                              dateTime: widget.item.dateTime);
-                          provider.updateTransaction(item);
-                          Navigator.pop(context);
-                        }
-                      },
+                      onPressed: _updateTransaction,
                       child: const Text(
                         'ยืนยัน',
                         style: TextStyle(
@@ -100,7 +107,7 @@ class _EditScreenState extends State<EditScreen> {
                     ElevatedButton(
                       onPressed: () {
                         var of = Navigator.of(context);
-                        of.pop(); // ย้อนกลับไปหน้าก่อนหน้า
+                        of.pop();
                       },
                       child: const Text('ยกเลิก',
                           style: TextStyle(

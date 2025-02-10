@@ -61,6 +61,26 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("อัพเดตข้อมูลสำเร็จ"),
+          content: const Text("ข้อมูลของคุณได้รับการอัพเดตเรียบร้อยแล้ว"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด Alert
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,84 +148,128 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: transactions.length,
             itemBuilder: (context, int index) {
               TransactionItem data = transactions[index];
-              return Card(
-                elevation: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              return Dismissible(
+                key: Key(data.keyID.toString()),
+                direction: DismissDirection.horizontal,
+                onDismissed: (direction) async {
+                  if (direction == DismissDirection.startToEnd) {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EditScreen(item: data)),
+                    );
+
+                    if (result == true) {
+                      _showSuccessDialog(context);
+                    }
+                  } else if (direction == DismissDirection.endToStart) {
+                    provider.deleteTransaction(data);
+                  }
+                },
+                background: Container(
+                  color: Colors.yellow.shade700,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(
+                    Icons.settings,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
-                color: Colors.white,
-                shadowColor: Colors.black.withOpacity(0.1),
-                child: Container(
-                  width: double.infinity,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                    title: Text(
-                      data.title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.teal.shade800,
+                secondaryBackground: Container(
+                  color: Colors.red, // ✅ สีแดงสำหรับลบ
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.white,
+                  ),
+                ),
+                child: Card(
+                  elevation: 8,
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  color: Colors.white,
+                  shadowColor: Colors.black.withOpacity(0.1),
+                  child: Container(
+                    width: double.infinity,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      title: Text(
+                        data.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.teal.shade800,
+                        ),
                       ),
-                    ),
-                    subtitle: Text(
-                      'วันที่บันทึกข้อมูล: ${DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                      subtitle: Text(
+                        'วันที่บันทึกข้อมูล: ${DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
                       ),
-                    ),
-                    leading: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: Colors.teal.shade700,
-                      child: FittedBox(
-                        child: Text(
-                          data.amount.toStringAsFixed(0),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                      leading: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.teal.shade700,
+                        child: FittedBox(
+                          child: Text(
+                            data.amount.toStringAsFixed(0),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    trailing: IconButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('ยืนยันการลบ'),
-                              content:
-                                  Text('คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text('ยกเลิก'),
-                                ),
-                                TextButton(
-                                  onPressed: () async {
-                                    await provider.deleteTransaction(data);
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text('ยืนยัน'),
-                                ),
-                              ],
-                            );
-                          },
+                      trailing: IconButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('ยืนยันการลบ'),
+                                content:
+                                    Text('คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('ยกเลิก'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      await provider.deleteTransaction(data);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('ยืนยัน'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        icon: Icon(Icons.delete, color: Colors.red.shade600),
+                      ),
+                      onTap: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => EditScreen(item: data)),
                         );
+
+                        if (result == true) {
+                          _showSuccessDialog(context);
+                        }
                       },
-                      icon: Icon(Icons.delete, color: Colors.red.shade600),
                     ),
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) {
-                        return EditScreen(item: data);
-                      }));
-                    },
                   ),
                 ),
               );
