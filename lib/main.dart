@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => TransactionProvider()),
       ],
       child: MaterialApp(
-        title: 'Fitnes',
+        title: 'Fitness',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
           useMaterial3: true,
