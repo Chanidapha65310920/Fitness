@@ -1,50 +1,37 @@
-import 'package:account/model/transaction.dart';
+import 'package:account/model/transactionItem.dart';
 import 'package:flutter/foundation.dart';
-import 'package:account/database/transactionDB.dart';
+import 'package:account/database/transaction_db.dart';
 
 class TransactionProvider with ChangeNotifier {
-  List<TransactionItem> transactions = [
-    //   Transaction(title: 'เสื้อยืด', amount: 200, dateTime: DateTime(2024, 12, 1, 9, 0)),
-    //   Transaction(title: 'รองเท้า', amount: 1500, dateTime: DateTime(2024, 11, 1, 9, 0)),
-    //   Transaction(title: 'กระเป๋า', amount: 1000, dateTime: DateTime(2024, 12, 24, 9, 0)),
-  ];
+  final TransactionDB db = TransactionDB(dbName: 'transaction.db');
+
+  List<TransactionItem> transactions = [];
 
   List<TransactionItem> getTransaction() => transactions;
 
-  initData() async {
-    var db = TransactionDB(dbName: 'transaction.db');
+  Future<void> initData() async {
     transactions = await db.loadAllData();
     notifyListeners();
   }
 
   Future<void> loadTransaction() async {
-    var db = TransactionDB(dbName: 'transaction.db');
-
     transactions = await db.loadAllData();
     notifyListeners();
   }
 
-  void addTransaction(TransactionItem transaction) async {
-    var db = TransactionDB(dbName: 'transaction.db');
-
+  Future<void> addTransaction(TransactionItem transaction) async {
     await db.insertDatabase(transaction);
-    transactions = await db.loadAllData();
-    notifyListeners();
+    await loadTransaction(); // โหลดข้อมูลใหม่แทนการเรียกซ้ำ
   }
 
-  updateTransaction(TransactionItem transaction) async {
-    var db = TransactionDB(dbName: 'transaction.db');
-
+  Future<void> updateTransaction(TransactionItem transaction) async {
     await db.updateData(transaction);
-    transactions = await db.loadAllData();
-    notifyListeners();
+    await loadTransaction(); // โหลดข้อมูลใหม่แทนการเรียกซ้ำ
   }
 
-  deleteTransaction(TransactionItem transaction) async {
-    var db = TransactionDB(dbName: 'transaction.db');
+  Future<void> deleteTransaction(TransactionItem transaction) async {
     await db.deleteData(transaction);
-    transactions = await db.loadAllData();
-    notifyListeners();
+    await loadTransaction(); // โหลดข้อมูลใหม่แทนการเรียกซ้ำ
   }
 
   List<TransactionItem> get latestTransactions {

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:account/formScreen.dart';
-import 'package:account/editScreen.dart';
+import 'package:account/formAdd.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:account/model/transaction.dart';
+import 'package:account/model/transactionItem.dart';
 import 'package:account/provider/transactionProvider.dart';
-import 'package:account/database/transactionDB.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,12 +19,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => TransactionProvider()),
       ],
       child: MaterialApp(
-        title: 'Account',
+        title: 'Fitness',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
           useMaterial3: true,
         ),
-        home: const MyHomePage(title: 'Flutter Home Page'),
+        home: const MyHomePage(title: 'เครื่องเล่นฟิตเนส'),
       ),
     );
   }
@@ -59,26 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _showLatest = value == 'Latest';
       }
     });
-  }
-
-  void _showSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("อัพเดตข้อมูลสำเร็จ"),
-          content: const Text("ข้อมูลของคุณได้รับการอัพเดตเรียบร้อยแล้ว"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // ปิด Alert
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -148,36 +126,15 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: transactions.length,
             itemBuilder: (context, int index) {
               TransactionItem data = transactions[index];
+
               return Dismissible(
                 key: Key(data.keyID.toString()),
-                direction: DismissDirection.horizontal,
-                onDismissed: (direction) async {
-                  if (direction == DismissDirection.startToEnd) {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => EditScreen(item: data)),
-                    );
-
-                    if (result == true) {
-                      _showSuccessDialog(context);
-                    }
-                  } else if (direction == DismissDirection.endToStart) {
-                    provider.deleteTransaction(data);
-                  }
+                direction: DismissDirection.endToStart,
+                onDismissed: (direction) {
+                  provider.deleteTransaction(data);
                 },
                 background: Container(
-                  color: Colors.yellow.shade700,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Icon(
-                    Icons.settings,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-                secondaryBackground: Container(
-                  color: Colors.red, // ✅ สีแดงสำหรับลบ
+                  color: Colors.red,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: const Icon(
@@ -207,24 +164,35 @@ class _MyHomePageState extends State<MyHomePage> {
                           color: Colors.teal.shade800,
                         ),
                       ),
-                      subtitle: Text(
-                        'วันที่บันทึกข้อมูล: ${DateFormat('dd/MM/yyyy HH:mm').format(data.dateTime)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ประเภท: ${data.type}',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                          Text(
+                            'สถานะ: ${data.status}',
+                            style: TextStyle(
+                              color: data.status == 'ใช้งานได้'
+                                  ? Colors.green
+                                  : data.status == 'กำลังซ่อม'
+                                      ? Colors.orange
+                                      : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                       leading: CircleAvatar(
-                        radius: 22,
+                        radius: 30,
                         backgroundColor: Colors.teal.shade700,
-                        child: FittedBox(
-                          child: Text(
-                            data.amount.toStringAsFixed(0),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
+                        child: Text(
+                          '${data.keyID}', // แสดง keyID
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
                       ),
@@ -245,8 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     child: Text('ยกเลิก'),
                                   ),
                                   TextButton(
-                                    onPressed: () async {
-                                      await provider.deleteTransaction(data);
+                                    onPressed: () {
+                                      provider.deleteTransaction(data);
                                       Navigator.of(context).pop();
                                     },
                                     child: Text('ยืนยัน'),
@@ -258,17 +226,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                         icon: Icon(Icons.delete, color: Colors.red.shade600),
                       ),
-                      onTap: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => EditScreen(item: data)),
-                        );
-
-                        if (result == true) {
-                          _showSuccessDialog(context);
-                        }
-                      },
                     ),
                   ),
                 ),
@@ -286,9 +243,15 @@ class _MyHomePageState extends State<MyHomePage> {
           if (result != null && result is Map<String, dynamic>) {
             Provider.of<TransactionProvider>(context, listen: false)
                 .addTransaction(TransactionItem(
-                    title: result['title'],
-                    amount: result['amount'],
-                    dateTime: DateTime.now()));
+              title: result['title'],
+              type: result['type'],
+              usage: result['usage'], 
+              brand: result['brand'], 
+              serialNumber: result['serialNumber'], 
+              purchaseDate: result['purchaseDate'], 
+              status: result['status'], 
+              dateTime: DateTime.now(),
+            ));
           }
         },
         child: const Icon(Icons.add),
