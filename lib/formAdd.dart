@@ -1,8 +1,11 @@
 import 'package:account/model/transactionItem.dart';
 import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:io'; 
+
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -21,6 +24,9 @@ class _FormScreenState extends State<FormScreen> {
   String? selectedType;
   String? selectedStatus;
   DateTime? purchaseDate;
+  File? _imageFile;  // ตัวแปรเก็บรูปภาพ
+
+  
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -46,13 +52,13 @@ class _FormScreenState extends State<FormScreen> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        body: SingleChildScrollView(  // ✅ ครอบ Form ด้วย ScrollView เพื่อป้องกันการซ่อน
+        body: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
               key: formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min,  // ✅ ป้องกันการถูกตัดออก
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
@@ -68,7 +74,7 @@ class _FormScreenState extends State<FormScreen> {
                       return null;
                     },
                   ),
-                  
+
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedType,
@@ -90,11 +96,12 @@ class _FormScreenState extends State<FormScreen> {
                     },
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return 'กรุณาเลือกประเภทเครื่องเล่น';
+                        return 'กรุณากรอกประเภทเครื่องเล่น';
                       }
                       return null;
                     },
                   ),
+
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: usageController,
@@ -180,11 +187,23 @@ class _FormScreenState extends State<FormScreen> {
                     },
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return 'กรุณาเลือกสถานะเครื่อง';
+                        return 'กรุณากรอกสถานะเครื่อง';
                       }
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  // เพิ่มปุ่มในการเลือกภาพ
+
+                  // แสดงรูปภาพที่เลือก
+                  if (_imageFile != null) 
+                    Image.file(
+                      _imageFile!,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                    ),
+
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -220,7 +239,8 @@ class _FormScreenState extends State<FormScreen> {
                         },
                         child: const Text('ยกเลิก',
                             style: TextStyle(
-                                fontWeight: FontWeight.bold, color: Colors.red)),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
                       ),
                     ],
                   ),

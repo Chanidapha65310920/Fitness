@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:account/formAdd.dart';
+import 'package:account/editScreen.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:account/model/transactionItem.dart';
 import 'package:account/provider/transactionProvider.dart';
 
@@ -123,115 +123,128 @@ class _MyHomePageState extends State<MyHomePage> {
               : provider.oldestTransactions;
 
           return ListView.builder(
-            itemCount: transactions.length,
-            itemBuilder: (context, int index) {
-              TransactionItem data = transactions[index];
+  itemCount: transactions.length,
+  itemBuilder: (context, int index) {
+    TransactionItem data = transactions[index];
 
-              return Dismissible(
-                key: Key(data.keyID.toString()),
-                direction: DismissDirection.endToStart,
-                onDismissed: (direction) {
-                  provider.deleteTransaction(data);
-                },
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Icon(
-                    Icons.delete,
-                    color: Colors.white,
+    return Dismissible(
+      key: Key(data.keyID.toString()),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        provider.deleteTransaction(data);
+      },
+      background: Container(
+        color: Colors.red,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: const Icon(
+          Icons.delete,
+          color: Colors.white,
+        ),
+      ),
+      child: Card(
+        elevation: 8,
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        color: Colors.white,
+        shadowColor: Colors.black.withOpacity(0.1),
+        child: Container(
+          width: double.infinity,
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            title: Text(
+              data.title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.teal.shade800,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ประเภท: ${data.type}',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                Text(
+                  'สถานะ: ${data.status}',
+                  style: TextStyle(
+                    color: data.status == 'ใช้งานได้'
+                        ? Colors.green
+                        : data.status == 'กำลังซ่อม'
+                            ? Colors.orange
+                            : Colors.red,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                child: Card(
-                  elevation: 8,
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              ],
+            ),
+            leading: CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.teal.shade700,
+              child: Text(
+                '${data.keyID}', // แสดง keyID
+                style: TextStyle(
                   color: Colors.white,
-                  shadowColor: Colors.black.withOpacity(0.1),
-                  child: Container(
-                    width: double.infinity,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 12),
-                      title: Text(
-                        data.title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.teal.shade800,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ประเภท: ${data.type}',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          Text(
-                            'สถานะ: ${data.status}',
-                            style: TextStyle(
-                              color: data.status == 'ใช้งานได้'
-                                  ? Colors.green
-                                  : data.status == 'กำลังซ่อม'
-                                      ? Colors.orange
-                                      : Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      leading: CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.teal.shade700,
-                        child: Text(
-                          '${data.keyID}', // แสดง keyID
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                      trailing: IconButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text('ยืนยันการลบ'),
-                                content:
-                                    Text('คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('ยกเลิก'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      provider.deleteTransaction(data);
-                                      Navigator.of(context).pop();
-                                    },
-                                    child: Text('ยืนยัน'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                        icon: Icon(Icons.delete, color: Colors.red.shade600),
-                      ),
-                    ),
-                  ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            // เพิ่ม onTap สำหรับการนำทางไปหน้า EditScreen
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditScreen(item: data),
                 ),
               );
+
+              // ตรวจสอบผลหลังจากกลับมาจาก EditScreen
+              if (result == true) {
+                // รีเฟรชข้อมูลที่แสดงในหน้า MyHomePage
+                setState(() {});
+              }
             },
-          );
+            trailing: IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('ยืนยันการลบ'),
+                      content: Text('คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('ยกเลิก'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            provider.deleteTransaction(data);
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('ยืนยัน'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              icon: Icon(Icons.delete, color: Colors.red.shade600),
+            ),
+          ),
+        ),
+      ),
+    );
+  },
+);
+
         },
       ),
       floatingActionButton: FloatingActionButton(
