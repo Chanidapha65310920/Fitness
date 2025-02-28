@@ -1,16 +1,18 @@
 class TransactionItem {
-  int? keyID;
-  String title;          // ชื่อเครื่องเล่น
-  String type;           // ประเภทเครื่องเล่น (คาร์ดิโอ / เวทเทรนนิ่ง)
-  String usage;          // วิธีใช้
-  String brand;          // แบรนด์
-  String serialNumber;   // หมายเลขซีเรียล
-  DateTime purchaseDate; // วันที่ซื้อ
-  String status;         // สถานะเครื่อง (ใช้งานได้ / กำลังซ่อม / เลิกใช้งาน)
-  DateTime dateTime;     // วันที่บันทึกข้อมูล
+  final int? keyID; // ใช้ keyId เป็น Primary Key
+  final String title;
+  final String type;
+  final String usage;
+  final String brand;
+  final String serialNumber;
+  final DateTime purchaseDate;
+  final String status;
+  final DateTime dateTime;
+  final String? imagePath;  // เก็บพาธรูปภาพ
+  final String? repairDetails;
 
   TransactionItem({
-    this.keyID,
+    this.keyID,  // ให้ keyId เป็น optional ในกรณีที่ยังไม่ได้ถูกบันทึกลงฐานข้อมูล
     required this.title,
     required this.type,
     required this.usage,
@@ -19,35 +21,39 @@ class TransactionItem {
     required this.purchaseDate,
     required this.status,
     required this.dateTime,
+    this.imagePath,  
+    this.repairDetails,
   });
 
-  // แปลงเป็น Map สำหรับเก็บลงฐานข้อมูล
-  Map<String, dynamic> toMap() {
-    return {
-      'keyID': keyID,
-      'title': title,
-      'type': type,
-      'usage': usage,
-      'brand': brand,
-      'serialNumber': serialNumber,
-      'purchaseDate': purchaseDate.toIso8601String(),
-      'status': status,
-      'dateTime': dateTime.toIso8601String(),
-    };
-  }
+  // แปลงเป็น JSON สำหรับการบันทึกลงฐานข้อมูล
+  Map<String, dynamic> toJson() => {
+        'keyId': keyID,  // เปลี่ยนจาก id เป็น keyId
+        'title': title,
+        'type': type,
+        'usage': usage,
+        'brand': brand,
+        'serialNumber': serialNumber,
+        'purchaseDate': purchaseDate.toIso8601String(),
+        'status': status,
+        'dateTime': dateTime.toIso8601String(),
+        'imagePath': imagePath,
+        'repairDetails': repairDetails,
+      };
 
-  // ฟังก์ชันสร้าง Object `TransactionItem` จาก Map (ใช้เวลาโหลดข้อมูลจากฐานข้อมูล)
-  factory TransactionItem.fromMap(Map<String, dynamic> map) {
+  // โหลดข้อมูลจาก JSON
+  factory TransactionItem.fromJson(Map<String, dynamic> json) {
     return TransactionItem(
-      keyID: map['keyID'],
-      title: map['title'] ?? "",
-      type: map['type'] ?? "",
-      usage: map['usage'] ?? "",
-      brand: map['brand'] ?? "",
-      serialNumber: map['serialNumber'] ?? "",
-      purchaseDate: DateTime.tryParse(map['purchaseDate'] ?? "") ?? DateTime.now(),
-      status: map['status'] ?? "",
-      dateTime: DateTime.tryParse(map['dateTime'] ?? "") ?? DateTime.now(),
+      keyID: json['keyID'],  // โหลด keyId
+      title: json['title'],
+      type: json['type'],
+      usage: json['usage'],
+      brand: json['brand'],
+      serialNumber: json['serialNumber'],
+      purchaseDate: DateTime.parse(json['purchaseDate']),
+      status: json['status'],
+      dateTime: DateTime.parse(json['dateTime']),
+      imagePath: json['imagePath'],
+      repairDetails: json['repairDetails'],
     );
   }
 }

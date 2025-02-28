@@ -1,11 +1,10 @@
-import 'package:account/model/transactionItem.dart';
-import 'package:account/provider/transactionProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:account/provider/transactionProvider.dart';
+import 'package:account/model/transactionItem.dart';
 import 'package:intl/intl.dart';
-import 'dart:io'; 
-
 
 class FormScreen extends StatefulWidget {
   const FormScreen({super.key});
@@ -24,17 +23,26 @@ class _FormScreenState extends State<FormScreen> {
   String? selectedType;
   String? selectedStatus;
   DateTime? purchaseDate;
-  File? _imageFile;  // ตัวแปรเก็บรูปภาพ
+  File? _imageFile;
 
-  
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
+  }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    DateTime? picked = await showDatePicker(
       context: context,
       initialDate: purchaseDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
     );
+
     if (picked != null && picked != purchaseDate) {
       setState(() {
         purchaseDate = picked;
@@ -45,202 +53,177 @@ class _FormScreenState extends State<FormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: const Text(
-            'เพิ่มเครื่องเล่น',
-            style: TextStyle(fontWeight: FontWeight.bold),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.cyan],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
-        body: SingleChildScrollView(
+        title: const Text(
+          'เพิ่มเครื่องเล่น',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Card(
+          elevation: 5, // ✅ เพิ่มเงาให้ Card
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             child: Form(
               key: formKey,
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                        labelText: 'ชื่อเครื่องเล่น',
-                        labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-                    autofocus: true,
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return 'กรุณากรอกชื่อเครื่องเล่น';
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedType,
-                    decoration: const InputDecoration(
-                      labelText: 'ประเภทเครื่องเล่น',
-                      labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                      border: OutlineInputBorder(),
+                  // ✅ หัวข้อ
+                  const Text(
+                    "เพิ่มข้อมูลเครื่องเล่น",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
                     ),
-                    items: ['คาร์ดิโอ', 'เวทเทรนนิ่ง']
-                        .map((type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type),
-                            ))
-                        .toList(),
-                    onChanged: (String? newValue) {
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ✅ ช่องกรอก "ชื่อเครื่องเล่น"
+                  _buildTextField(
+                      titleController, "ชื่อเครื่องเล่น", Icons.fitness_center),
+
+                  // ✅ เลือกรูปภาพ
+                  Center(
+                    child: Column(
+                      children: [
+                        _imageFile != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.file(_imageFile!,
+                                    width: 200, height: 200, fit: BoxFit.cover),
+                              )
+                            : const Text(
+                                'ยังไม่ได้เลือกรูป',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                        const SizedBox(height: 8),
+
+// ✅ ปุ่ม "เลือกรูปภาพ" ที่ยาวขึ้น แต่ไม่เต็มหน้าจอ
+                        SizedBox(
+                          width: 200, // ✅ กำหนดความกว้างปุ่มให้พอดี
+                          child: _buildButton(
+                            text: "เลือกรูปภาพ",
+                            color: Colors.blueAccent,
+                            icon: Icons.image,
+                            onPressed: _pickImage,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+const SizedBox(height: 8),
+
+                  // ✅ Dropdown "ประเภทเครื่องเล่น"
+                  _buildDropdown(
+                    label: "ประเภทเครื่องเล่น",
+                    value: selectedType,
+                    items: ['คาร์ดิโอ', 'เวทเทรนนิ่ง'],
+                    icon: Icons.category,
+                    onChanged: (value) {
                       setState(() {
-                        selectedType = newValue;
+                        selectedType = value;
                       });
                     },
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'กรุณากรอกประเภทเครื่องเล่น';
-                      }
-                      return null;
-                    },
                   ),
 
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: usageController,
-                    decoration: const InputDecoration(
-                        labelText: 'วิธีใช้',
-                        labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return 'กรุณากรอกวิธีใช้';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: brandController,
-                    decoration: const InputDecoration(
-                        labelText: 'แบรนด์',
-                        labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return 'กรุณากรอกแบรนด์';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: serialNumberController,
-                    decoration: const InputDecoration(
-                        labelText: 'หมายเลขซีเรียล',
-                        labelStyle: TextStyle(fontWeight: FontWeight.bold)),
-                    validator: (String? value) {
-                      if (value!.isEmpty) {
-                        return 'กรุณากรอกหมายเลขซีเรียล';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                  // ✅ ช่องกรอก "วิธีใช้"
+                  _buildTextField(
+                      usageController, "วิธีใช้", Icons.description),
+
+                  // ✅ ช่องกรอก "แบรนด์"
+                  _buildTextField(
+                      brandController, "แบรนด์", Icons.branding_watermark),
+
+                  // ✅ ช่องกรอก "หมายเลขซีเรียล"
+                  _buildTextField(serialNumberController, "หมายเลขซีเรียล",
+                      Icons.confirmation_number),
+
+                  // ✅ เลือกวันที่ซื้อ
                   GestureDetector(
                     onTap: () => _selectDate(context),
                     child: AbsorbPointer(
-                      child: TextFormField(
-                        decoration: InputDecoration(
-                          labelText: 'วันที่ซื้อ',
-                          labelStyle:
-                              const TextStyle(fontWeight: FontWeight.bold),
-                          suffixIcon: const Icon(Icons.calendar_today),
-                        ),
-                        controller: TextEditingController(
+                      child: _buildTextField(
+                        TextEditingController(
                           text: purchaseDate != null
                               ? DateFormat('dd/MM/yyyy').format(purchaseDate!)
                               : '',
                         ),
-                        validator: (value) {
-                          if (purchaseDate == null) {
-                            return 'กรุณาเลือกวันที่ซื้อ';
-                          }
-                          return null;
-                        },
+                        "วันที่ซื้อ",
+                        Icons.calendar_today,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
+
+                  // ✅ Dropdown "สถานะเครื่อง"
+                  _buildDropdown(
+                    label: "สถานะเครื่อง",
                     value: selectedStatus,
-                    decoration: const InputDecoration(
-                      labelText: 'สถานะเครื่อง',
-                      labelStyle: TextStyle(fontWeight: FontWeight.bold),
-                      border: OutlineInputBorder(),
-                    ),
-                    items: ['ใช้งานได้', 'กำลังซ่อม', 'เลิกใช้งาน']
-                        .map((status) => DropdownMenuItem(
-                              value: status,
-                              child: Text(status),
-                            ))
-                        .toList(),
-                    onChanged: (String? newValue) {
+                    items: ['ใช้งานได้', 'กำลังซ่อม', 'เลิกใช้งาน'],
+                    icon: Icons.check_circle,
+                    onChanged: (value) {
                       setState(() {
-                        selectedStatus = newValue;
+                        selectedStatus = value;
                       });
                     },
-                    validator: (String? value) {
-                      if (value == null || value.isEmpty) {
-                        return 'กรุณากรอกสถานะเครื่อง';
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 16),
-                  // เพิ่มปุ่มในการเลือกภาพ
 
-                  // แสดงรูปภาพที่เลือก
-                  if (_imageFile != null) 
-                    Image.file(
-                      _imageFile!,
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit.cover,
-                    ),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 16),
+                  // ✅ ปุ่ม "เพิ่มข้อมูล" และ "ยกเลิก"
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          if (formKey.currentState!.validate()) {
-                            var provider = Provider.of<TransactionProvider>(
-                                context,
-                                listen: false);
-                            TransactionItem item = TransactionItem(
+                      Expanded(
+                        child: _buildButton(
+                          text: "เพิ่มข้อมูล",
+                          color: Colors.green,
+                          icon: Icons.save,
+                          onPressed: () {
+                            if (formKey.currentState!.validate()) {
+                              final newTransaction = TransactionItem(
                                 title: titleController.text,
-                                type: selectedType ?? "",
+                                type: selectedType ?? 'ไม่ระบุ',
                                 usage: usageController.text,
                                 brand: brandController.text,
                                 serialNumber: serialNumberController.text,
                                 purchaseDate: purchaseDate ?? DateTime.now(),
-                                status: selectedStatus ?? "",
-                                dateTime: DateTime.now());
-                            provider.addTransaction(item);
-                            Navigator.pop(context);
-                          }
-                        },
-                        child: const Text(
-                          'เพิ่มข้อมูล',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.green),
+                                status: selectedStatus ?? 'ไม่ระบุ',
+                                dateTime: DateTime.now(),
+                                imagePath: _imageFile?.path,
+                              );
+
+                              Provider.of<TransactionProvider>(context,
+                                      listen: false)
+                                  .addTransaction(newTransaction);
+
+                              Navigator.pop(context);
+                            }
+                          },
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text('ยกเลิก',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _buildButton(
+                          text: "ยกเลิก",
+                          color: Colors.red,
+                          icon: Icons.cancel,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -248,6 +231,99 @@ class _FormScreenState extends State<FormScreen> {
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
+  }
+
+// ✅ ฟังก์ชันสร้างช่องกรอกข้อมูล
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          prefixIcon: Icon(icon, color: Colors.blue),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        validator: (value) {
+          if (value!.isEmpty) {
+            return 'กรุณากรอก$label';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+// ✅ ฟังก์ชันสร้าง Dropdown
+  Widget _buildDropdown({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required IconData icon,
+    required Function(String?) onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          prefixIcon: Icon(icon, color: Colors.blue),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        items: items
+            .map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(item),
+                ))
+            .toList(),
+        onChanged: onChanged,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'กรุณาเลือก$label';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+// ✅ ฟังก์ชันสร้างปุ่ม
+  Widget _buildButton({
+    required String text,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(
+        text,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+    );
   }
 }

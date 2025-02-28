@@ -45,4 +45,10 @@ class TransactionProvider with ChangeNotifier {
     sortedList.sort((a, b) => a.dateTime.compareTo(b.dateTime));
     return sortedList;
   }
+
+  List<TransactionItem> getRepairTransactions() {
+    return transactions.where((item) => item.status == "แจ้งซ่อม").toList();
+  }
+
+  
 }
