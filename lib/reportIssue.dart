@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:account/model/transactionItem.dart';
-import 'package:account/provider/transactionProvider.dart';
+import 'package:account/model/fitness_Model.dart';
+import 'package:account/provider/fitness_Provider.dart';
 import 'dart:io';
 
 // Import หน้าต่างๆ
@@ -14,6 +14,7 @@ class ReportIssuePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(210, 245, 202, 73),
       appBar: AppBar(
         title: const Text(
           "รายการแจ้งซ่อม",
@@ -50,8 +51,7 @@ class ReportIssuePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.fitness_center, color: Colors.white, size: 50),
-                  SizedBox(height: 10),
+                  SizedBox(height: 70),
                   Text(
                     "เมนู",
                     style: TextStyle(
@@ -131,7 +131,7 @@ class ReportIssuePage extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey),
+                    color: Colors.black),
               ),
             );
           }
@@ -248,7 +248,6 @@ class ReportIssuePage extends StatelessWidget {
         },
       ),
     );
-  
   }
 }
 
@@ -261,6 +260,7 @@ class ReportDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(210, 245, 202, 73),
       appBar: AppBar(
         title: const Text(
           "รายละเอียดการแจ้งซ่อม",
@@ -281,7 +281,8 @@ class ReportDetailPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Card(
           elevation: 5, // ✅ เพิ่มเงา
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -299,7 +300,8 @@ class ReportDetailPage extends StatelessWidget {
                             fit: BoxFit.contain,
                           ),
                         )
-                      : const Icon(Icons.build, size: 100, color: Colors.orange),
+                      : const Icon(Icons.build,
+                          size: 100, color: Colors.orange),
                 ),
 
                 const SizedBox(height: 20),
@@ -320,9 +322,11 @@ class ReportDetailPage extends StatelessWidget {
 
                 // ✅ รายละเอียดเครื่องเล่น
                 _buildDetailRow("ประเภท", transaction.type, Icons.category),
-                _buildDetailRow("แบรนด์", transaction.brand, Icons.branding_watermark),
-                _buildDetailRow("หมายเลขซีเรียล", transaction.serialNumber, Icons.confirmation_number),
-                
+                _buildDetailRow(
+                    "แบรนด์", transaction.brand, Icons.branding_watermark),
+                _buildDetailRow("หมายเลขซีเรียล", transaction.serialNumber,
+                    Icons.confirmation_number),
+
                 _buildStatusRow("สถานะ", transaction.status),
 
                 if (transaction.repairDetails != null &&
@@ -334,7 +338,8 @@ class ReportDetailPage extends StatelessWidget {
                       const Divider(thickness: 1.5),
                       const Text(
                         "รายละเอียดการซ่อม:",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       Text(
                         transaction.repairDetails!,
@@ -344,7 +349,6 @@ class ReportDetailPage extends StatelessWidget {
                   ),
 
                 const SizedBox(height: 20),
-
               ],
             ),
           ),

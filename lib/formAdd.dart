@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
-import 'package:account/provider/transactionProvider.dart';
-import 'package:account/model/transactionItem.dart';
+import 'package:account/provider/fitness_Provider.dart';
+import 'package:account/model/fitness_Model.dart';
 import 'package:intl/intl.dart';
 
 class FormScreen extends StatefulWidget {

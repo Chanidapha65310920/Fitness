@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:account/formAdd.dart';
 import 'package:account/editScreen.dart';
-import 'package:account/model/transactionItem.dart';
-import 'package:account/provider/transactionProvider.dart';
+import 'package:account/detailScreen.dart';
+import 'package:account/model/fitness_Model.dart';
+import 'package:account/provider/fitness_Provider.dart';
 import 'dart:io';
 
 // เพิ่ม import หน้าต่างๆ ที่ใช้
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
           useMaterial3: true,
         ),
-        home: const MyHomePage(title: 'รายการเครื่องเล่นฟิตเนส'),
+        home: const MyHomePage(title: 'เครื่องเล่นฟิตเนส'),
       ),
     );
   }
@@ -61,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFB3D7FF),
       appBar: AppBar(
         title: Text(
           widget.title,
@@ -158,8 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.fitness_center, color: Colors.white, size: 50),
-                  SizedBox(height: 10),
+                  SizedBox(height: 70),
                   Text(
                     "เมนู",
                     style: TextStyle(
@@ -197,7 +198,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.blue[900], fontWeight: FontWeight.w600),
               ),
               onTap: () {
-                Navigator.pop(context); // ✅ ปิด Drawer
+                Navigator.pop(context); // ✅ ปิด Drawer ก่อน
+                Navigator.pushReplacement(
+                  // ✅ ไปที่หน้า MainPage
+                  context,
+                  MaterialPageRoute(builder: (context) => MyApp()),
+                );
               },
             ),
             ListTile(
@@ -246,116 +252,177 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: transactions.length,
             itemBuilder: (context, index) {
               TransactionItem data = transactions[index];
-              return Card(
-                elevation: 5,
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start, // ✅ จัดแนวตั้ง
-                    children: [
-                      // ✅ ปรับขนาดรูปภาพให้เล็กลง
-                      if (data.imagePath != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: AspectRatio(
-                            // ✅ รักษาอัตราส่วนของรูปภาพ
-                            aspectRatio: 16 / 9, // ✅ กำหนดสัดส่วน (ปรับได้)
-                            child: Image.file(
-                              File(data.imagePath!),
-                              width: double.infinity,
-                              fit: BoxFit.contain,
-                              // ✅ ปรับให้รูปเต็มความกว้างโดยไม่ถูกครอบ
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailScreen(item: data),
+                    ),
+                  );
+                },
+                child: Card(
+                  elevation: 5,
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ✅ แสดงรูปภาพ
+                        if (data.imagePath != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: Image.file(
+                                File(data.imagePath!),
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
+
+                        const SizedBox(height: 15),
+
+                        // ✅ แสดงชื่อเครื่องเล่น
+                        Text(
+                          data.title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
                         ),
 
-                      // ✅ เว้นระยะห่าง
-                      const SizedBox(height: 15),
-
-                      // ✅ แสดงชื่อเครื่องเล่น
-                      Text(
-                        data.title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-
-                      // ✅ แสดงประเภท
-                      Text(
-                        "ประเภท: ${data.type}",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      ),
-
-                      // ✅ แสดงสถานะ
-                      Text(
-                        "สถานะ: ${data.status}",
-                        style: TextStyle(
-                          color: data.status == 'ใช้งานได้'
-                              ? Colors.green
-                              : data.status == 'กำลังซ่อม'
-                                  ? Colors.orange
-                                  : Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                        // ✅ แสดงประเภท
+                        Text(
+                          "ประเภท: ${data.type}",
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 14),
                         ),
-                      ),
 
-                      // ✅ ปุ่มแก้ไขและลบ
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () async {
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
+                        // ✅ แสดงสถานะ
+                        Text(
+                          "สถานะ: ${data.status}",
+                          style: TextStyle(
+                            color: data.status == 'ใช้งานได้'
+                                ? Colors.green
+                                : data.status == 'กำลังซ่อม'
+                                    ? Colors.orange
+                                    : Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        // ✅ ปุ่มแก้ไขและลบ (ยังคงอยู่)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // ✅ ปุ่มแก้ไข (พื้นหลังมน)
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
                                     builder: (context) =>
-                                        EditScreen(item: data)),
-                              );
-                              if (result == true) {
-                                setState(() {}); // รีเฟรชรายการ
-                              }
-                            },
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            label: const Text("แก้ไข"),
-                          ),
-                          TextButton.icon(
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('ยืนยันการลบ'),
-                                  content: const Text(
-                                      'คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('ยกเลิก')),
-                                    TextButton(
-                                      onPressed: () {
-                                        Provider.of<TransactionProvider>(
-                                                context,
-                                                listen: false)
-                                            .deleteTransaction(data);
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('ยืนยัน',
-                                          style: TextStyle(color: Colors.red)),
-                                    ),
-                                  ],
+                                        EditScreen(item: data),
+                                  ),
+                                );
+                                if (result == true) {
+                                  setState(() {}); // รีเฟรชรายการ
+                                }
+                              },
+                              icon: const Icon(Icons.edit, color: Colors.white),
+                              label: const Text("แก้ไข"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue, // ✅ พื้นหลังสีฟ้า
+                                foregroundColor: Colors.white, // ✅ ข้อความสีขาว
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12), // ✅ ขอบมน
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            label: const Text("ลบ"),
-                          ),
-                        ],
-                      ),
-                    ],
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8), // ✅ ปรับขนาดปุ่ม
+                              ),
+                            ),
+
+                            // ✅ ปุ่มลบ (พื้นหลังมน)
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (data == null) {
+                                  Navigator.pop(context); // ✅ ปิด Dialog ก่อน
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            "เกิดข้อผิดพลาด: ไม่พบข้อมูลที่จะลบ")),
+                                  );
+                                  return;
+                                }
+
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('ยืนยันการลบ'),
+                                    content: const Text(
+                                        'คุณแน่ใจหรือว่าต้องการลบรายการนี้?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('ยกเลิก'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          var provider =
+                                              Provider.of<TransactionProvider>(
+                                                  context,
+                                                  listen: false);
+
+                                          provider.deleteTransaction(data);
+
+                                          provider
+                                              .notifyListeners(); // ✅ รีเฟรช UI
+
+                                          Navigator.of(context,
+                                                  rootNavigator: true)
+                                              .pop(); // ✅ ปิด Dialog
+
+                                          // ✅ แจ้งเตือนว่าลบสำเร็จ
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content:
+                                                    Text("ลบข้อมูลสำเร็จ")),
+                                          );
+                                        },
+                                        child: const Text('ยืนยัน',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              icon:
+                                  const Icon(Icons.delete, color: Colors.white),
+                              label: const Text("ลบ"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

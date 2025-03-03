@@ -8,20 +8,7 @@ class IndexPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("หน้าหลัก",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blue, Colors.lightBlueAccent],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        elevation: 0,
-      ),
+      
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -40,7 +27,7 @@ class IndexPage extends StatelessWidget {
                 const Text(
                   "ยินดีต้อนรับสู่ FitPro Gym",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 35,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
